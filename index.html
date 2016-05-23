@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		
+		<title>VideoEvents.js</title>
+		
+		<script src="https://f.vimeocdn.com/js/froogaloop2.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="VideoEvents.js"></script>
+	<body>
+		<iframe id="player" type="text/html" width="640" height="390" src="http://www.youtube.com/embed/M7lc1UVf-VE?enablejsapi=1" frameborder="0"></iframe>
+		
+		<iframe id="vimeoplayer" src="https://player.vimeo.com/video/165053513?api=1&amp;player_id=vimeoplayer" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+		
+		<script type="text/javascript">
+			var tag = document.createElement('script');
+			tag.src = "https://www.youtube.com/iframe_api";
+			var firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+			
+			function onYouTubeIframeAPIReady() {
+				console.log('api');
+				
+				var player = new YT.Player('player');
+				var ytEvents = new VideoEvents(player);
+			}
+			
+			var iframe = $('#vimeoplayer')[0];
+			var player = $f(iframe);
+			
+			var vimeoEvents = new VideoEvents(player);
+		</script>
+	</body>
+</html> 
