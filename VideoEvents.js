@@ -36,6 +36,10 @@
 		};
 		
 		pub.destroy = function() {
+			if ( ! player) {
+				return;
+			}
+			
 			if (isYouTube) {
 				player.removeEventListener('onReady', onReady);
 				player.removeEventListener('onStateChange', onStateChange);
@@ -47,7 +51,8 @@
 				player.removeEvent('playProgress');
 			}
 			
-			player = null;
+			listeners = [];
+			player    = null;
 		};
 		
 		var init = function(videoPlayer) {
@@ -68,6 +73,7 @@
 			console.log(normalizeEventValue('25%'));
 			console.log(normalizeEventValue('20'));
 			console.log(normalizeEventValue(53));
+			console.log(normalizeEventValue(NaN));
 		};
 		
 		var onReady = function() {
@@ -123,7 +129,9 @@
 				}
 			}
 			
+			value = 0 + value;
 			
+			if 
 			
 			return false;
 		};
