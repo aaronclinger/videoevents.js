@@ -7,12 +7,90 @@
 (function(window) {
 	'use strict';
 	
-	function VideoListener() {
+	function VideoListener(e, fn, one) {
 		var pub = {};
+		var callback;
+		var event;
+		var type;
+		var once;
 		
 		
+		pub.getEvent = function() {
+			return event;
+		};
 		
-		return pub;
+		pub.getType = function() {
+			return type;
+		};
+		
+		pub.getCallback = function() {
+			return callback;
+		};
+		
+		pub.isOnce = function() {
+			return once;
+		};
+		
+		var init = function(e, fn, one) {
+			if ( ! parseEventType(e)) {
+				return false;
+			}
+			
+			callback = fn;
+			once     = !! one;
+			
+			return pub;
+		};
+		
+		var parseEventType = function(e) {
+			if (e === '' + e) {
+				e = e.toLowerCase();
+				
+				switch (e) {
+					case 'play' :
+					case 'ready' :
+					case 'pause' :
+					case 'finish' :
+					case 'progress' :
+						type  = 'status';
+						event = e;
+						return true;
+					default :
+						if (e.slice(-1) === '%') {
+							e = convertToNumber(e.slice(0, -1));
+							
+							if (e !== false && e > 0 && e < 100) {
+								type  = 'percent';
+								event = e;
+								return true;
+							}
+						}
+				}
+			}
+			
+			e = convertToNumber(e);
+			
+			if (e === false) {
+				return false;
+			}
+			
+			type  = 'time';
+			event = e;
+			
+			return true;
+		};
+		
+		var convertToNumber = function(val) {
+			val = +val;
+			
+			if (val + 0 === val) {
+				return val;
+			}
+			
+			return false;
+		};
+		
+		return init(e, fn, one);
 	}
 	
 	function VideoEvents(videoPlayer) {
@@ -56,24 +134,14 @@
 		};
 		
 		var init = function(videoPlayer) {
-			if (videoPlayer) {
-				player    = videoPlayer;
-				isYouTube = !! player.addEventListener;
-				
-				if (isYouTube) {
-					player.addEventListener('onReady', onReady);
-				} else {
-					player.addEvent('ready', onReady);
-				}
-			}
+			player    = videoPlayer;
+			isYouTube = !! player.addEventListener;
 			
-			console.log(normalizeEventValue('Play'));
-			console.log(normalizeEventValue('play'));
-			console.log(normalizeEventValue(0.25));
-			console.log(normalizeEventValue('25%'));
-			console.log(normalizeEventValue('20'));
-			console.log(normalizeEventValue(53));
-			console.log(normalizeEventValue(NaN));
+			if (isYouTube) {
+				player.addEventListener('onReady', onReady);
+			} else {
+				player.addEvent('ready', onReady);
+			}
 		};
 		
 		var onReady = function() {
@@ -109,31 +177,6 @@
 					//console.log('pause');
 					break;
 			}
-		};
-		
-		var normalizeEventValue = function(value) {
-			if (value === '' + value) {
-				value = value.toLowerCase();
-				
-				switch (value) {
-					case 'play' :
-					case 'ready' :
-					case 'pause' :
-					case 'finish' :
-					case 'progress' :
-						return value;
-				}
-				
-				if (value.slice(-1) === '%') {
-					value = value.slice(0, -1) / 100;
-				}
-			}
-			
-			value = 0 + value;
-			
-			if 
-			
-			return false;
 		};
 		
 		var getEventData = function() {
