@@ -31,11 +31,25 @@
 			return once;
 		};
 		
+		pub.equals = function(vidListener, ignoreCallback) {
+			var isEqual = pub.getEvent() === vidListener.getEvent() && pub.getType() === vidListener.getType();
+			
+			if (isEqual && ! ignoreCallback) {
+				isEqual = pub.getCallback() === vidListener.getCallback();
+			}
+			
+			return isEqual;
+		};
+		
 		var init = function(e, fn, one) {
-			if ( ! parseEventType(e)) {
+			e = parseEventType(e);
+			
+			if (e === false) {
 				return false;
 			}
 			
+			event    = e.event;
+			type     = e.type;
 			callback = fn;
 			once     = !! one;
 			
@@ -52,17 +66,13 @@
 					case 'pause' :
 					case 'finish' :
 					case 'progress' :
-						type  = 'status';
-						event = e;
-						return true;
+						return {type: 'status', event: e};
 					default :
 						if (e.slice(-1) === '%') {
 							e = convertToNumber(e.slice(0, -1));
 							
 							if (e !== false && e > 0 && e < 100) {
-								type  = 'percent';
-								event = e;
-								return true;
+								return {type: 'percent', event: e};
 							}
 						}
 				}
@@ -74,14 +84,11 @@
 				return false;
 			}
 			
-			type  = 'time';
-			event = e;
-			
-			return true;
+			return {type: 'time', event: e};
 		};
 		
 		var convertToNumber = function(val) {
-			val = +val;
+			val = Number(val);
 			
 			if (val + 0 === val) {
 				return val;
@@ -102,15 +109,45 @@
 		
 		
 		pub.on = function(eventValue, callback) {
+			addEvent(eventValue, callback, false);
 			
+			return pub;
 		};
 		
 		pub.once = function(eventValue, callback) {
+			addEvent(eventValue, callback, true);
 			
+			return pub;
 		};
 		
 		pub.off = function(eventValue, callback) {
+			var l = listeners.length;
+			var listen;
 			
+			if (eventValue) {
+				listen = new VideoListener(eventValue, callback);
+				
+				if (listen !== false) {
+					if (callback) {
+						while (l--) {
+							if (listeners[l].equals(listen)) {
+								listeners.splice(l, 1);
+								break;
+							}
+						}
+					} else {
+						while (l--) {
+							if (listeners[l].equals(listen, true)) {
+								listeners.splice(l, 1);
+							}
+						}
+					}
+				}
+			} else {
+				listeners = [];
+			}
+			
+			return pub;
 		};
 		
 		pub.destroy = function() {
@@ -142,6 +179,23 @@
 			} else {
 				player.addEvent('ready', onReady);
 			}
+		};
+		
+		var addEvent = function(eventValue, callback, once) {
+			var listen = new VideoListener(eventValue, callback, once);
+			var l;
+			
+			if (listen !== false) {
+				l = listeners.length;
+				
+				while (l--) {
+					if (listeners[l].equals(listen)) {
+						return;
+					}
+				}
+			}
+			
+			listeners.push(listen);
 		};
 		
 		var onReady = function() {
