@@ -7,6 +7,8 @@ Event | Description
 `pause` | TBD
 `progress` | TBD
 `end` | TBD
+`percent` | TBD
+`time` | TBD
 
 
 

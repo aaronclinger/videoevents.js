@@ -21,14 +21,12 @@
 			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 			
 			function onYouTubeIframeAPIReady() {
-				console.log('api');
-				
 				var player = new YT.Player('player');
 				var videoEvents = new VideoEvents(player);
 				videoEvents.on('play', function(data) {
 					console.log('class', data);
 				});
-				videoEvents.on('progress', function(data) {
+				videoEvents.on('end', function(data) {
 					console.log('class', data);
 				});
 			}
@@ -36,10 +34,10 @@
 			var player = new Vimeo.Player($('#vimeoplayer'));
 			
 			var videoEvents = new VideoEvents(player);
-			videoEvents.once('end', function(data) {
+			videoEvents.on('.05%', function(data) {
 				console.log('class', data);
 			});
-			videoEvents.on('progress', function(data) {
+			videoEvents.on(10, function(data) {
 				console.log('class', data);
 			});
 		</script>

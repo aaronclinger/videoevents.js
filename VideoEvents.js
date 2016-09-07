@@ -8,7 +8,7 @@
 	'use strict';
 	
 	function videoListener(e, fn, one) {
-		var pub = {};
+		var pub = {before: true};
 		var callback;
 		var value;
 		var type;
@@ -32,12 +32,23 @@
 		};
 		
 		pub.trigger = function(time, percent, duration) {
-			callback({
+			// @TODO – Send value for percent and time events
+			
+			var data = {
 				type: type,
 				time: time,
 				percent: percent,
 				duration: duration
-			});
+			};
+			
+			switch (type) {
+				case 'percent' :
+				case 'time' :
+					data.value = value;
+					break;
+			}
+			
+			callback(data);
 		};
 		
 		pub.equals = function(vidListener, ignoreCallback) {
@@ -79,7 +90,7 @@
 						if (e.slice(-1) === '%') {
 							e = convertToNumber(e.slice(0, -1));
 							
-							if (e !== false && e >= 0 && e <= 100) {
+							if (e !== false && e >= 0 && e <= 1) {
 								return {type: 'percent', value: e};
 							}
 						}
@@ -158,6 +169,10 @@
 			return pub;
 		};
 		
+		pub.getPlayer = function() {
+			return player;
+		};
+		
 		pub.destroy = function() {
 			if ( ! player) {
 				return;
@@ -220,7 +235,7 @@
 			while (l--) {
 				listen = listeners[l];
 				
-				if (listen.getType() === type) {
+				if (type === listen.getType()) {
 					switch (type) {
 						case 'play' :
 						case 'pause' :
@@ -232,6 +247,33 @@
 								listeners.splice(l, 1);
 							}
 							
+							break;
+					}
+				} else if (type === 'progress') {
+					switch (listen.getType()) {
+						case 'time' :
+							if (listen.getValue() > time) {
+								listen.before = true;
+							} else if (listen.before && listen.getValue() <= time) {
+								listen.trigger(time, percent, duration);
+								listen.before = false;
+								
+								if (listen.isOnce()) {
+									listeners.splice(l, 1);
+								}
+							}
+							break;
+						case 'percent' :
+							if (listen.getValue() > percent) {
+								listen.before = true;
+							} else if (listen.before && listen.getValue() <= percent) {
+								listen.trigger(time, percent, duration);
+								listen.before = false;
+								
+								if (listen.isOnce()) {
+									listeners.splice(l, 1);
+								}
+							}
 							break;
 					}
 				}
@@ -249,12 +291,6 @@
 					break;
 				case 1 : // play
 					youtubeCheckEvents('play');
-					
-					if (interval === null) {
-						interval = setInterval(function() {
-							youtubeCheckEvents('progress');
-						}, 200);
-					}
 					break;
 				case 2 : // pause
 					youtubeCheckEvents('pause');
@@ -271,6 +307,13 @@
 			var percent  = Math.min(1, Math.max(0, time / duration));
 			
 			switch (type) {
+				case 'play' :
+					if (interval === null) {
+						interval = setInterval(function() {
+							youtubeCheckEvents('progress');
+						}, 200);
+					}
+					break;
 				case 'pause' :
 				case 'end' :
 					clearInterval(interval);
