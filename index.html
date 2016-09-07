@@ -6,13 +6,13 @@
 		
 		<title>VideoEvents.js</title>
 		
-		<script src="https://f.vimeocdn.com/js/froogaloop2.min.js"></script>
+		<script src="https://player.vimeo.com/api/player.js"></script>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 		<script src="VideoEvents.js"></script>
 	<body>
 		<iframe id="player" type="text/html" width="640" height="390" src="http://www.youtube.com/embed/M7lc1UVf-VE?enablejsapi=1" frameborder="0"></iframe>
 		
-		<iframe id="vimeoplayer" src="https://player.vimeo.com/video/165053513?api=1&amp;player_id=vimeoplayer" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+		<iframe id="vimeoplayer" src="https://player.vimeo.com/video/165053513" width="640" height="360" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 		
 		<script type="text/javascript">
 			var tag = document.createElement('script');
@@ -21,16 +21,27 @@
 			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 			
 			function onYouTubeIframeAPIReady() {
-				//console.log('api');
+				console.log('api');
 				
 				var player = new YT.Player('player');
-				//var ytEvents = new VideoEvents(player);
+				var videoEvents = new VideoEvents(player);
+				videoEvents.on('play', function(data) {
+					console.log('class', data);
+				});
+				videoEvents.on('progress', function(data) {
+					console.log('class', data);
+				});
 			}
 			
-			var iframe = $('#vimeoplayer')[0];
-			var player = $f(iframe);
+			var player = new Vimeo.Player($('#vimeoplayer'));
 			
-			var vimeoEvents = new VideoEvents(player);
+			var videoEvents = new VideoEvents(player);
+			videoEvents.once('end', function(data) {
+				console.log('class', data);
+			});
+			videoEvents.on('progress', function(data) {
+				console.log('class', data);
+			});
 		</script>
 	</body>
 </html> 

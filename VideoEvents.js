@@ -7,16 +7,16 @@
 (function(window) {
 	'use strict';
 	
-	function VideoListener(e, fn, one) {
+	function videoListener(e, fn, one) {
 		var pub = {};
 		var callback;
-		var event;
+		var value;
 		var type;
 		var once;
 		
 		
-		pub.getEvent = function() {
-			return event;
+		pub.getValue = function() {
+			return value;
 		};
 		
 		pub.getType = function() {
@@ -31,8 +31,17 @@
 			return once;
 		};
 		
+		pub.trigger = function(time, percent, duration) {
+			callback({
+				type: type,
+				time: time,
+				percent: percent,
+				duration: duration
+			});
+		};
+		
 		pub.equals = function(vidListener, ignoreCallback) {
-			var isEqual = pub.getEvent() === vidListener.getEvent() && pub.getType() === vidListener.getType();
+			var isEqual = pub.getValue() === vidListener.getValue() && pub.getType() === vidListener.getType();
 			
 			if (isEqual && ! ignoreCallback) {
 				isEqual = pub.getCallback() === vidListener.getCallback();
@@ -48,8 +57,8 @@
 				return false;
 			}
 			
-			event    = e.event;
 			type     = e.type;
+			value    = e.value;
 			callback = fn;
 			once     = !! one;
 			
@@ -62,17 +71,16 @@
 				
 				switch (e) {
 					case 'play' :
-					case 'ready' :
 					case 'pause' :
-					case 'finish' :
+					case 'end' :
 					case 'progress' :
-						return {type: 'status', event: e};
+						return {type: e, value: null};
 					default :
 						if (e.slice(-1) === '%') {
 							e = convertToNumber(e.slice(0, -1));
 							
-							if (e !== false && e > 0 && e < 100) {
-								return {type: 'percent', event: e};
+							if (e !== false && e >= 0 && e <= 100) {
+								return {type: 'percent', value: e};
 							}
 						}
 				}
@@ -84,7 +92,7 @@
 				return false;
 			}
 			
-			return {type: 'time', event: e};
+			return {type: 'time', value: e};
 		};
 		
 		var convertToNumber = function(val) {
@@ -103,7 +111,6 @@
 	function VideoEvents(videoPlayer) {
 		var pub       = {};
 		var listeners = [];
-		var isReady   = false;
 		var isYouTube;
 		var player;
 		
@@ -125,7 +132,7 @@
 			var listen;
 			
 			if (eventValue) {
-				listen = new VideoListener(eventValue, callback);
+				listen = videoListener(eventValue, callback);
 				
 				if (listen !== false) {
 					if (callback) {
@@ -156,14 +163,13 @@
 			}
 			
 			if (isYouTube) {
-				player.removeEventListener('onReady', onReady);
-				player.removeEventListener('onStateChange', onStateChange);
+				player.removeEventListener('onReady', ytOnReady);
+				player.removeEventListener('onStateChange', ytOnStateChange);
 			} else {
-				player.removeEvent('ready');
-				player.removeEvent('play');
-				player.removeEvent('pause');
-				player.removeEvent('finish');
-				player.removeEvent('playProgress');
+				player.off('play', vimeoOnPlay);
+				player.off('pause', vimeoOnPause);
+				player.off('ended', vimeoOnEnd);
+				player.off('timeupdate', vimeoOnProgress);
 			}
 			
 			listeners = [];
@@ -175,14 +181,17 @@
 			isYouTube = !! player.addEventListener;
 			
 			if (isYouTube) {
-				player.addEventListener('onReady', onReady);
+				player.addEventListener('onReady', ytOnReady);
 			} else {
-				player.addEvent('ready', onReady);
+				player.on('play', vimeoOnPlay);
+				player.on('pause', vimeoOnPause);
+				player.on('ended', vimeoOnEnd);
+				player.on('timeupdate', vimeoOnProgress);
 			}
 		};
 		
 		var addEvent = function(eventValue, callback, once) {
-			var listen = new VideoListener(eventValue, callback, once);
+			var listen = videoListener(eventValue, callback, once);
 			var l;
 			
 			if (listen !== false) {
@@ -193,33 +202,41 @@
 						return;
 					}
 				}
-			}
-			
-			listeners.push(listen);
-		};
-		
-		var onReady = function() {
-			isReady = true;
-			
-			if (isYouTube) {
-				player.addEventListener('onStateChange', onStateChange);
-			} else {
-				player.addEvent('play', function(data) {
-					//console.log('play', data);
-				});
-				player.addEvent('pause', function(data) {
-					//console.log('pause', data);
-				});
-				player.addEvent('finish', function(data) {
-					//console.log('finish', data);
-				});
-				player.addEvent('playProgress', function(data) {
-					//console.log(data);
-				});
+				
+				listeners.push(listen);
 			}
 		};
 		
-		var onStateChange = function(event) {
+		var checkEvents = function(type, time, percent, duration) {
+			var l = listeners.length;
+			var listen;
+			
+			while (l--) {
+				listen = listeners[l];
+				
+				if (listen.getType() === type) {
+					switch (type) {
+						case 'play' :
+						case 'pause' :
+						case 'end' :
+						case 'progress' :
+							listen.trigger(time, percent, duration);
+							
+							if (listen.isOnce()) {
+								listeners.splice(l, 1);
+							}
+							
+							break;
+					}
+				}
+			}
+		};
+		
+		var ytOnReady = function() {
+			player.addEventListener('onStateChange', ytOnStateChange);
+		};
+		
+		var ytOnStateChange = function(event) {
 			switch (event.data) {
 				case 0 :
 					//console.log('finish');
@@ -233,12 +250,24 @@
 			}
 		};
 		
-		var getEventData = function() {
-			return {
-				time: 0,
-				percent: 0,
-				duration: 0
-			};
+		var vimeoOnPlay = function(data) {
+			vimeoCheckEvents('play', data);
+		};
+		
+		var vimeoOnPause = function(data) {
+			vimeoCheckEvents('pause', data);
+		};
+		
+		var vimeoOnEnd = function(data) {
+			vimeoCheckEvents('end', data);
+		};
+		
+		var vimeoOnProgress = function(data) {
+			vimeoCheckEvents('progress', data);
+		};
+		
+		var vimeoCheckEvents = function(type, data) {
+			checkEvents(type, data.seconds, data.percent, data.duration);
 		};
 		
 		init(videoPlayer);
