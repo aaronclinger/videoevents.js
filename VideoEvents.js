@@ -285,21 +285,21 @@
 		var youtubeOnStateChange = function(event) {
 			switch (event.data) {
 				case 0 : // end
-					youtubeCheckEvents('end');
+					youtubeEvent('end');
 					break;
 				case 1 : // play
-					youtubeCheckEvents('play');
+					youtubeEvent('play');
 					break;
 				case 2 : // pause
-					youtubeCheckEvents('pause');
+					youtubeEvent('pause');
 					break;
 				case 3 : // buffering
-					youtubeCheckEvents('progress');
+					youtubeEvent('progress');
 					break;
 			}
 		};
 		
-		var youtubeCheckEvents = function(type) {
+		var youtubeEvent = function(type) {
 			var time     = player.getCurrentTime();
 			var duration = player.getDuration();
 			var percent  = Math.min(1, Math.max(0, time / duration));
@@ -308,7 +308,7 @@
 				case 'play' :
 					if (interval === null) {
 						interval = setInterval(function() {
-							youtubeCheckEvents('progress');
+							youtubeEvent('progress');
 						}, 200);
 					}
 					break;
@@ -323,22 +323,22 @@
 		};
 		
 		var vimeoOnPlay = function(data) {
-			vimeoCheckEvents('play', data);
+			vimeoEvent('play', data);
 		};
 		
 		var vimeoOnPause = function(data) {
-			vimeoCheckEvents('pause', data);
+			vimeoEvent('pause', data);
 		};
 		
 		var vimeoOnEnd = function(data) {
-			vimeoCheckEvents('end', data);
+			vimeoEvent('end', data);
 		};
 		
 		var vimeoOnProgress = function(data) {
-			vimeoCheckEvents('progress', data);
+			vimeoEvent('progress', data);
 		};
 		
-		var vimeoCheckEvents = function(type, data) {
+		var vimeoEvent = function(type, data) {
 			checkEvents(type, data.seconds, data.percent, data.duration);
 		};
 		
