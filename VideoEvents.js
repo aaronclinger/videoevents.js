@@ -309,7 +309,7 @@
 					if (interval === null) {
 						interval = setInterval(function() {
 							youtubeEvent('progress');
-						}, 200);
+						}, 250);
 					}
 					break;
 				case 'pause' :

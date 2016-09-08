@@ -1,5 +1,5 @@
 # VideoEvents.js
-An utility which simplifies and standardizes Vimeo and YouTube video events.
+An utility which simplifies and standardizes Vimeo and YouTube core video events:
 
 ### Example Usage
 ```javascript
@@ -16,43 +16,46 @@ vimeoEvents.once('-10', function(data) {
 });
 ```
 
-## Creating an Instance
+## <a id="create"></a>Creating an Instance
 
 ## Methods
 
 ### on(*event, callback*)
 
-This method returns the instance of `VideoEvents` to allow for method chaining.
+Attaches an event handler function to the provided event. This method returns the instance of `VideoEvents` to allow for method chaining.
 
-* **event** (String) - 
-* **callback** (Function) - 
-
-### off(*[event] [, callback]*)
-
-This method returns the instance of `VideoEvents` to allow for method chaining.
-
-* **[event]** (String) - 
-* **[callback]** (Function) - 
+* **event** (String) - The type of [event](#events).
+* **callback** (Function) - The function to execute when the event is triggered.
 
 ### once(*event, callback*)
 
-This method returns the instance of `VideoEvents` to allow for method chaining.
+Attaches an event handler function to the provided event that is executed, at most, once per event type. Once the event has been triggered the event handler automatically removes itself. This method returns the instance of `VideoEvents` to allow for method chaining.
 
-* **event** (String) - 
-* **callback** (Function) - 
+* **event** (String) - The type of [event](#events).
+* **callback** (Function) - The function to execute when the event is triggered.
+
+### off(*event [, callback]*)
+
+Removes event handlers. This method returns the instance of `VideoEvents` to allow for method chaining.
+
+* **event** (String) - The type of [event](#events).
+* **[callback]** (Function) - The function to execute when the event is triggered. If `callback` is not passed, this method will remove all handlers for the provided `event`.
+
+If neither `event` or `callback` are passed, this method will remove *all* event handlers from the `VideoEvents` instance.
 
 ### getPlayer()
 
+Returns the Vimeo or YouTube player used to [instantiate](#create) the `VideoEvents` instance.
 
 ### destroy()
 
 Removes any events and stops all internal processes to allow for prompt garbage collection.
 
-## Events
+## <a id="events"></a>Events
 
 ### play
 
-Triggered when
+Triggered when the video plays.
 
 ```javascript
 videoEvents.on('play', function(data) {
@@ -62,7 +65,7 @@ videoEvents.on('play', function(data) {
 
 ### pause
 
-Triggered when
+Triggered when the video pauses.
 
 ```javascript
 videoEvents.on('pause', function(data) {
@@ -72,7 +75,7 @@ videoEvents.on('pause', function(data) {
 
 ### progress
 
-Triggered when
+Triggered when the time / play position of the video updates. This fires in ~250ms intervals during playback.
 
 ```javascript
 videoEvents.on('progress', function(data) {
@@ -82,7 +85,7 @@ videoEvents.on('progress', function(data) {
 
 ### end
 
-Triggered when
+Triggered any time the playback reaches the end of the video.
 
 ```javascript
 videoEvents.on('end', function(data) {
