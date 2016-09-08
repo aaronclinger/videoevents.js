@@ -23,10 +23,10 @@ videoEvents.on('play', function(data) {
 	// Triggered when the time / play position of the video updates
 	console.log('progress', data);
 }).once('5%', function(data) {
-	// riggered when the time / play position of the video reaches 5% of the duration
+	// Triggered when the time / play position of the video reaches 5% of the duration
 	console.log('5%', data);
 }).once('-10', function(data) {
-	// Triggered once ten seconds from / until the end of the video
+	// Triggered once ten seconds from the end of the video
 	console.log('-10', data);
 });
 ```
@@ -120,6 +120,18 @@ Removes any events and stops all internal processes to allow for prompt garbage 
 
 ## <a id="events"></a>Events
 
+All `VideoEvents` events pass a data `Object` to the event handler function:
+
+* **data** `Object` - Data that is passed to the event handler function:
+    * **data.sender** `Object` - The instance of `VideoEvents` that sent the event.
+    * **data.type** `String` - The type of event.
+    * **data.time** `Number` - The current playback position in seconds.
+    * **data.percent** `Number` - The current playback position as a decimal percentage.
+    * **data.duration** `Number` - The duration of the video in seconds.
+    * **[data.value]** `Number` - For [percent](#event-percent) and [time](#event-time) events only:
+        * For `percent` events, `value` is 
+        * For `time` events, `value` is 
+
 ### play
 
 Triggered when the video plays.
@@ -163,7 +175,7 @@ videoEvents.on('end', function(data) {
 
 ### <a id="event-percent"></a>percent
 
-Triggered when
+Triggered when the 
 
 ```javascript
 videoEvents.on('5%', function(data) {
@@ -173,10 +185,10 @@ videoEvents.on('5%', function(data) {
 
 ### <a id="event-time"></a>time
 
-Triggered when
+Triggered when the playback passes the defined time in seconds. For negative values, the provided seconds is subtracted from the video duration. 
 
 ```javascript
-videoEvents.on('10', function(data) {
+videoEvents.on('10.5', function(data) {
 	console.log('progress', data);
 });
 
