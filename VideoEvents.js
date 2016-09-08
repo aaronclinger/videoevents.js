@@ -1,4 +1,4 @@
-/* jshint strict: true, browser: true, nonbsp: true, bitwise: true, immed: true, latedef: true, eqeqeq: true, undef: true, curly: true, unused: false */
+/* jshint strict: true, browser: true, nonbsp: true, bitwise: true, immed: true, latedef: true, eqeqeq: true, undef: true, curly: true, unused: true */
 
 /**
  * @author Aaron Clinger - https://github.com/aaronclinger/videoevents.js
@@ -48,7 +48,6 @@
 	
 	function VideoListener(eventData, fn, one) {
 		var pub   = {before: true};
-		var valid = false;
 		var callback;
 		var value;
 		var type;
@@ -73,7 +72,7 @@
 		
 		pub.trigger = function(player, time, percent, duration) {
 			var data = {
-				player: player,
+				sender: player,
 				type: type,
 				time: time,
 				percent: percent,
@@ -90,10 +89,10 @@
 			callback(data);
 		};
 		
-		pub.equals = function(vidListener, ignoreCallback) {
+		pub.equals = function(vidListener, compareCallback) {
 			var isEqual = value === vidListener.getValue() && type === vidListener.getType();
 			
-			if (isEqual && ! ignoreCallback) {
+			if (isEqual && compareCallback) {
 				isEqual = callback === vidListener.getCallback();
 			}
 			
@@ -134,6 +133,7 @@
 		
 		pub.off = function(event, callback) {
 			var l = listeners.length;
+			var hasCallback;
 			var eventData;
 			var listen;
 			
@@ -141,19 +141,15 @@
 				eventData = parseEventData(event);
 				
 				if (eventData !== false) {
-					listen = new VideoListener(eventData, callback);
+					listen      = new VideoListener(eventData, callback);
+					hasCallback = !! callback;
 					
-					if (callback) {
-						while (l--) {
-							if (listeners[l].equals(listen)) {
-								listeners.splice(l, 1);
+					while (l--) {
+						if (listeners[l].equals(listen, hasCallback)) {
+							listeners.splice(l, 1);
+							
+							if (hasCallback) {
 								break;
-							}
-						}
-					} else {
-						while (l--) {
-							if (listeners[l].equals(listen, true)) {
-								listeners.splice(l, 1);
 							}
 						}
 					}
@@ -217,7 +213,7 @@
 				l      = listeners.length;
 				
 				while (l--) {
-					if (listeners[l].equals(listen)) {
+					if (listeners[l].equals(listen, true)) {
 						return;
 					}
 				}
@@ -228,11 +224,14 @@
 		
 		var checkEvents = function(type, time, percent, duration) {
 			var l = listeners.length;
+			var shouldTrigger;
+			var compare;
 			var listen;
 			var value;
 			
 			while (l--) {
-				listen = listeners[l];
+				listen        = listeners[l];
+				shouldTrigger = false;
 				
 				if (type === listen.getType()) {
 					switch (type) {
@@ -240,31 +239,40 @@
 						case 'pause' :
 						case 'end' :
 						case 'progress' :
-							listen.trigger(pub, time, percent, duration);
-							
-							if (listen.isOnce()) {
-								listeners.splice(l, 1);
-							}
-							
+							shouldTrigger = true;
 							break;
 					}
 				} else if (type === 'progress') {
 					switch (listen.getType()) {
 						case 'time' :
 						case 'percent' :
-							value = listen.getType() === 'percent' ? percent : time;
+							value = listen.getValue();
 							
-							if (listen.getValue() > value) {
-								listen.before = true;
-							} else if (listen.before && listen.getValue() <= value) {
-								listen.trigger(pub, time, percent, duration);
-								listen.before = false;
+							if (listen.getType() === 'time') {
+								compare = time;
 								
-								if (listen.isOnce()) {
-									listeners.splice(l, 1);
+								if (value < 0) {
+									value = Math.max(0, duration + value);
 								}
+							} else {
+								compare = percent;
+							}
+							
+							if (value > compare) {
+								listen.before = true;
+							} else if (listen.before && value <= compare) {
+								listen.before = false;
+								shouldTrigger = true;
 							}
 							break;
+					}
+				}
+				
+				if (shouldTrigger) {
+					listen.trigger(pub, time, percent, duration);
+					
+					if (listen.isOnce()) {
+						listeners.splice(l, 1);
 					}
 				}
 			}
