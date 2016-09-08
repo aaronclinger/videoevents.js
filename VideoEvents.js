@@ -293,9 +293,6 @@
 				case 2 : // pause
 					youtubeEvent('pause');
 					break;
-				case 3 : // buffering
-					youtubeEvent('progress');
-					break;
 			}
 		};
 		

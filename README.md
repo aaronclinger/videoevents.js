@@ -1,22 +1,70 @@
 # VideoEvents.js
+
 An utility which simplifies and standardizes Vimeo and YouTube core video events:
 
 ### Example Usage
-```javascript
-var vimeoEvents = new VideoEvents(new Vimeo.Player('#vimeoplayer'));
 
-vimeoEvents.on('progress', function(data) {
+```javascript
+var vimeoEvents = new VideoEvents(new Vimeo.Player('vimeoplayer'));
+
+vimeoEvents.on('play', function(data) {
+	console.log('play', data);
+}).on('progress', function(data) {
 	console.log('progress', data);
-});
-vimeoEvents.once('5%', function(data) {
+}).once('5%', function(data) {
 	console.log('5%', data);
-});
-vimeoEvents.once('-10', function(data) {
+}).once('-10', function(data) {
 	console.log('-10', data);
 });
 ```
 
 ## <a id="create"></a>Creating an Instance
+
+In order for you to use `VideoEvents`, you need to first instantiate either the [Vimeo](https://github.com/vimeo/player.js) or [YouTube](https://developers.google.com/youtube/iframe_api_reference) player APIs.
+
+### Vimeo
+
+```html
+<iframe id="vimeoplayer" src="https://player.vimeo.com/video/76979871" width="640" height="360" frameborder="0"></iframe>
+
+<script src="https://player.vimeo.com/api/player.js"></script>
+<script src="VideoEvents.js"></script>
+
+<script>
+	var vimeoPlayer = new Vimeo.Player('vimeoplayer');
+	var vimeoVideoEvents = new VideoEvents(vimeoPlayer);
+	
+	vimeoVideoEvents.on('play', function(data) {
+		console.log('play', data);
+	});
+	vimeoVideoEvents.on('progress', function(data) {
+		console.log('progress', data);
+	});
+</script>
+```
+
+### YouTube
+
+```html
+<iframe id="ytplayer" src="http://www.youtube.com/embed/bHQqvYy5KYo?enablejsapi=1" width="640" height="360" frameborder="0"></iframe>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="VideoEvents.js"></script>
+
+<script>
+	function onYouTubeIframeAPIReady() {
+		var ytPlayer = new YT.Player('ytplayer');
+		var ytVideoEvents = new VideoEvents(ytPlayer);
+		
+		ytVideoEvents.on('play', function(data) {
+			console.log('play', data);
+		});
+		ytVideoEvents.on('progress', function(data) {
+			console.log('progress', data);
+		});
+	}
+</script>
+```
 
 ## Methods
 
