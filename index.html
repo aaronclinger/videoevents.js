@@ -23,23 +23,23 @@
 			function onYouTubeIframeAPIReady() {
 				var player = new YT.Player('player');
 				var videoEvents = new VideoEvents(player);
-				/*videoEvents.on('.05%', function(data) {
+				videoEvents.on('.05%', function(data) {
 					console.log('class', data);
 				});
 				videoEvents.on('10', function(data) {
 					console.log('class', data);
-				});*/
+				});
 			}
 			
 			var player = new Vimeo.Player($('#vimeoplayer'));
 			
 			var videoEvents = new VideoEvents(player);
-			videoEvents.on('test', function(data) {
+			videoEvents.on('0.05%', function(data) {
 				console.log('class', data);
 			});
-			/*videoEvents.on(10, function(data) {
+			videoEvents.on(10, function(data) {
 				console.log('class', data);
-			});*/
+			});
 		</script>
 	</body>
 </html> 

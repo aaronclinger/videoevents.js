@@ -1,5 +1,4 @@
 /* jshint strict: true, browser: true, nonbsp: true, bitwise: true, immed: true, latedef: true, eqeqeq: true, undef: true, curly: true, unused: false */
-/* global console */
 
 /**
  * @author Aaron Clinger - https://github.com/aaronclinger/videoevents.js
@@ -7,7 +6,47 @@
 (function(window) {
 	'use strict';
 	
-	function VideoListener(e, fn, one) {
+	var parseEventData = function(e) {
+		if (e === '' + e) {
+			e = e.toLowerCase();
+			
+			switch (e) {
+				case 'play' :
+				case 'pause' :
+				case 'end' :
+				case 'progress' :
+					return {type: e, value: null};
+				default :
+					if (e.slice(-1) === '%') {
+						e = convertToNumber(e.slice(0, -1));
+						
+						if (e !== false && e >= 0 && e <= 1) {
+							return {type: 'percent', value: e};
+						}
+					}
+			}
+		}
+		
+		e = convertToNumber(e);
+		
+		if (e === false) {
+			return false;
+		}
+		
+		return {type: 'time', value: e};
+	};
+	
+	var convertToNumber = function(val) {
+		val = Number(val);
+		
+		if (val + 0 === val) {
+			return val;
+		}
+		
+		return false;
+	};
+	
+	function VideoListener(eventData, fn, one) {
 		var pub   = {before: true};
 		var valid = false;
 		var callback;
@@ -32,8 +71,9 @@
 			return once;
 		};
 		
-		pub.trigger = function(time, percent, duration) {
+		pub.trigger = function(player, time, percent, duration) {
 			var data = {
+				player: player,
 				type: type,
 				time: time,
 				percent: percent,
@@ -51,67 +91,25 @@
 		};
 		
 		pub.equals = function(vidListener, ignoreCallback) {
-			var isEqual = pub.getValue() === vidListener.getValue() && pub.getType() === vidListener.getType();
+			var isEqual = value === vidListener.getValue() && type === vidListener.getType();
 			
 			if (isEqual && ! ignoreCallback) {
-				isEqual = pub.getCallback() === vidListener.getCallback();
+				isEqual = callback === vidListener.getCallback();
 			}
 			
 			return isEqual;
 		};
 		
-		var init = function(event, fn, one) {
-			event = parseEvent(event);
-			
-			type     = event.type;
-			value    = event.value;
+		var init = function(eventData, fn, one) {
+			type     = eventData.type;
+			value    = eventData.value;
 			callback = fn;
 			once     = !! one;
 			
 			return pub;
 		};
 		
-		var parseEvent = function(e) {
-			if (e === '' + e) {
-				e = e.toLowerCase();
-				
-				switch (e) {
-					case 'play' :
-					case 'pause' :
-					case 'end' :
-					case 'progress' :
-						return {type: e, value: null};
-					default :
-						if (e.slice(-1) === '%') {
-							e = convertToNumber(e.slice(0, -1));
-							
-							if (e !== false && e >= 0 && e <= 1) {
-								return {type: 'percent', value: e};
-							}
-						}
-				}
-			}
-			
-			e = convertToNumber(e);
-			
-			if (e === false) {
-				throw new Error('Invalid Event');
-			}
-			
-			return {type: 'time', value: e};
-		};
-		
-		var convertToNumber = function(val) {
-			val = Number(val);
-			
-			if (val + 0 === val) {
-				return val;
-			}
-			
-			return false;
-		};
-		
-		return init(e, fn, one);
+		return init(eventData, fn, one);
 	}
 	
 	function VideoEvents(videoPlayer) {
@@ -135,15 +133,16 @@
 		};
 		
 		pub.off = function(event, callback) {
-			var l      = listeners.length;
-			var listen = false;
+			var l = listeners.length;
+			var eventData;
+			var listen;
 			
 			if (event) {
-				try {
-					listen = new VideoListener(event, callback);
-				} catch (e) {}
+				eventData = parseEventData(event);
 				
-				if (listen !== false) {
+				if (eventData !== false) {
+					listen = new VideoListener(eventData, callback);
+					
 					if (callback) {
 						while (l--) {
 							if (listeners[l].equals(listen)) {
@@ -208,16 +207,14 @@
 			}
 		};
 		
-		var addEvent = function(eventValue, callback, once) {
-			var listen = false;
+		var addEvent = function(event, callback, once) {
+			var eventData = parseEventData(event);
+			var listen;
 			var l;
 			
-			try {
-				listen = new VideoListener(eventValue, callback, once);
-			} catch (e) {}
-			
-			if (listen !== false) {
-				l = listeners.length;
+			if (eventData !== false) {
+				listen = new VideoListener(eventData, callback, once);
+				l      = listeners.length;
 				
 				while (l--) {
 					if (listeners[l].equals(listen)) {
@@ -243,7 +240,7 @@
 						case 'pause' :
 						case 'end' :
 						case 'progress' :
-							listen.trigger(time, percent, duration);
+							listen.trigger(pub, time, percent, duration);
 							
 							if (listen.isOnce()) {
 								listeners.splice(l, 1);
@@ -260,7 +257,7 @@
 							if (listen.getValue() > value) {
 								listen.before = true;
 							} else if (listen.before && listen.getValue() <= value) {
-								listen.trigger(time, percent, duration);
+								listen.trigger(pub, time, percent, duration);
 								listen.before = false;
 								
 								if (listen.isOnce()) {
