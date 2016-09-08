@@ -9,11 +9,3 @@ Event | Description
 `end` | TBD
 `percent` | TBD
 `time` | TBD
-
-
-
-ready onReady
-playProgress
-play onStateChange
-pause onStateChange
-finish onStateChange

@@ -7,8 +7,9 @@
 (function(window) {
 	'use strict';
 	
-	function videoListener(e, fn, one) {
-		var pub = {before: true};
+	function VideoListener(e, fn, one) {
+		var pub   = {before: true};
+		var valid = false;
 		var callback;
 		var value;
 		var type;
@@ -32,8 +33,6 @@
 		};
 		
 		pub.trigger = function(time, percent, duration) {
-			// @TODO – Send value for percent and time events
-			
 			var data = {
 				type: type,
 				time: time,
@@ -61,22 +60,18 @@
 			return isEqual;
 		};
 		
-		var init = function(e, fn, one) {
-			e = parseEventType(e);
+		var init = function(event, fn, one) {
+			event = parseEvent(event);
 			
-			if (e === false) {
-				return false;
-			}
-			
-			type     = e.type;
-			value    = e.value;
+			type     = event.type;
+			value    = event.value;
 			callback = fn;
 			once     = !! one;
 			
 			return pub;
 		};
 		
-		var parseEventType = function(e) {
+		var parseEvent = function(e) {
 			if (e === '' + e) {
 				e = e.toLowerCase();
 				
@@ -100,7 +95,7 @@
 			e = convertToNumber(e);
 			
 			if (e === false) {
-				return false;
+				throw new Error('Invalid Event');
 			}
 			
 			return {type: 'time', value: e};
@@ -127,24 +122,26 @@
 		var player;
 		
 		
-		pub.on = function(eventValue, callback) {
-			addEvent(eventValue, callback, false);
+		pub.on = function(event, callback) {
+			addEvent(event, callback, false);
 			
 			return pub;
 		};
 		
-		pub.once = function(eventValue, callback) {
-			addEvent(eventValue, callback, true);
+		pub.once = function(event, callback) {
+			addEvent(event, callback, true);
 			
 			return pub;
 		};
 		
-		pub.off = function(eventValue, callback) {
-			var l = listeners.length;
-			var listen;
+		pub.off = function(event, callback) {
+			var l      = listeners.length;
+			var listen = false;
 			
-			if (eventValue) {
-				listen = videoListener(eventValue, callback);
+			if (event) {
+				try {
+					listen = new VideoListener(event, callback);
+				} catch (e) {}
 				
 				if (listen !== false) {
 					if (callback) {
@@ -212,8 +209,12 @@
 		};
 		
 		var addEvent = function(eventValue, callback, once) {
-			var listen = videoListener(eventValue, callback, once);
+			var listen = false;
 			var l;
+			
+			try {
+				listen = new VideoListener(eventValue, callback, once);
+			} catch (e) {}
 			
 			if (listen !== false) {
 				l = listeners.length;
@@ -231,6 +232,7 @@
 		var checkEvents = function(type, time, percent, duration) {
 			var l = listeners.length;
 			var listen;
+			var value;
 			
 			while (l--) {
 				listen = listeners[l];
@@ -252,21 +254,12 @@
 				} else if (type === 'progress') {
 					switch (listen.getType()) {
 						case 'time' :
-							if (listen.getValue() > time) {
-								listen.before = true;
-							} else if (listen.before && listen.getValue() <= time) {
-								listen.trigger(time, percent, duration);
-								listen.before = false;
-								
-								if (listen.isOnce()) {
-									listeners.splice(l, 1);
-								}
-							}
-							break;
 						case 'percent' :
-							if (listen.getValue() > percent) {
+							value = listen.getType() === 'percent' ? percent : time;
+							
+							if (listen.getValue() > value) {
 								listen.before = true;
-							} else if (listen.before && listen.getValue() <= percent) {
+							} else if (listen.before && listen.getValue() <= value) {
 								listen.trigger(time, percent, duration);
 								listen.before = false;
 								
