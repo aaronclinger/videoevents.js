@@ -4,7 +4,7 @@ An utility which simplifies and standardizes Vimeo and YouTube core video events
 
 `VideoEvents` is designed to make video monitoring and tracking simpler:
 
-* Allows tracking for multiple videos from either – or both – Vimeo and YouTube
+* Track multiple videos from either – or both – Vimeo and YouTube
 * Makes playback events and the events API consistent between the two services
 * Adds the missing playback [progess](#event-progress) event to the YouTube player API
 * Trigger events at specific playback [time](#event-time) – relative to either the beginning or end of the video – without having to know the video’s duration
@@ -20,10 +20,10 @@ videoEvents.on('play', function(data) {
 	// Triggered when the video plays
 	console.log('play', data);
 }).on('progress', function(data) {
-	// Triggered when the time / play position of the video updates
+	// Triggered when the time/play position of the video updates
 	console.log('progress', data);
 }).once('5%', function(data) {
-	// Triggered when the time / play position of the video reaches 5% of the duration
+	// Triggered when the time/play position of the video reaches 5% of the duration
 	console.log('5%', data);
 }).once('-10', function(data) {
 	// Triggered once ten seconds from the end of the video
@@ -41,7 +41,7 @@ Creates a new instance of `VideoEvents`.
 
 #### Vimeo Example
 
-*Note:* `VideoEvents` *uses Vimeo’s newer player API and not their previous Froogaloop library.*
+*Note:* `VideoEvents` *uses Vimeo’s newer [player API](https://github.com/vimeo/player.js) and not their previous Froogaloop library.*
 
 ```html
 <iframe id="vimeoplayer" src="https://player.vimeo.com/video/76979871" width="640" height="360" frameborder="0"></iframe>
@@ -129,8 +129,8 @@ All `VideoEvents` events pass a data `Object` to the event handler function:
     * **data.percent** `Number` - The current playback position as a decimal percentage.
     * **data.duration** `Number` - The duration of the video in seconds.
     * **[data.value]** `Number` - For [percent](#event-percent) and [time](#event-time) events only:
-        * For `percent` events, `value` is 
-        * For `time` events, `value` is 
+        * For `percent` events, the `value` is the [specified](#event-percent) as a 0-1 decimal percentage.
+        * For `time` events, the `value` is the [specified](#event-time) time in seconds.
 
 ### play
 
@@ -154,7 +154,7 @@ videoEvents.on('pause', function(data) {
 
 ### <a id="event-progress"></a>progress
 
-Triggered when the time / play position of the video updates. This fires in ~250ms intervals during playback.
+Triggered when the time/play position of the video updates. This fires in ~250ms intervals during playback.
 
 ```javascript
 videoEvents.on('progress', function(data) {
@@ -175,7 +175,9 @@ videoEvents.on('end', function(data) {
 
 ### <a id="event-percent"></a>percent
 
-Triggered when the 
+Triggered when the playback passes the defined percent of the duration. Percent should be specified as 0%-100% `String` value that includes the percent sign (%).
+
+*Note: This event may not be triggered exactly at the specified percent but will be triggered by the first [progress](#event-progress) event after the defined time.*
 
 ```javascript
 videoEvents.on('5%', function(data) {
@@ -185,10 +187,12 @@ videoEvents.on('5%', function(data) {
 
 ### <a id="event-time"></a>time
 
-Triggered when the playback passes the defined time in seconds. For negative values, the provided seconds is subtracted from the video duration. 
+Triggered when the playback passes the defined time in seconds. Seconds can be specified as a `String` or as a `Number`. For negative values, the provided seconds is subtracted from the video duration. 
+
+*Note: This event may not be triggered exactly at the specified time but will be triggered by the first [progress](#event-progress) event after the defined time.*
 
 ```javascript
-videoEvents.on('10.5', function(data) {
+videoEvents.on(10.5, function(data) {
 	console.log('progress', data);
 });
 
