@@ -6,7 +6,7 @@ An utility which simplifies and standardizes Vimeo and YouTube core video events
 
 * Track multiple videos from either – or both – Vimeo and YouTube
 * Makes playback events and the events API consistent between the two services
-* Adds the missing playback [progess](#event-progress) event to the YouTube player API
+* Adds the missing playback [progress](#event-progress) event to the YouTube player API
 * Trigger events at specific playback [time](#event-time) – relative to either the beginning or end of the video – without having to know the video’s duration
 * Trigger events at specific playback [percentage](#event-percent)
 * Add event handlers that are only executed [once](#method-once)
