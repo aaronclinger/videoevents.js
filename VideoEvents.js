@@ -47,7 +47,7 @@
 	};
 	
 	function VideoListener(eventData, fn, one) {
-		var pub   = {before: true};
+		var pub = {before: true};
 		var callback;
 		var value;
 		var type;
