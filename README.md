@@ -1,6 +1,6 @@
 # VideoEvents.js
 
-An utility which simplifies and standardizes Vimeo and YouTube core video events.
+A utility which simplifies and standardizes Vimeo and YouTube core video events.
 
 `VideoEvents` is designed to make video monitoring and tracking simpler:
 
