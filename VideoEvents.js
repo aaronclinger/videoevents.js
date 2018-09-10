@@ -20,8 +20,8 @@
 					if (e.slice(-1) === '%') {
 						e = convertToNumber(e.slice(0, -1));
 						
-						if (e !== false && e >= 0 && e <= 1) {
-							return {type: 'percent', value: e};
+						if (e !== false && e >= 0 && e <= 100) {
+							return {type: 'percent', value: e / 100};
 						}
 					}
 			}
@@ -223,14 +223,14 @@
 		};
 		
 		var checkEvents = function(type, time, percent, duration) {
-			var l = listeners.length;
+			var i = -1;
 			var shouldTrigger;
 			var compare;
 			var listen;
 			var value;
 			
-			while (l--) {
-				listen        = listeners[l];
+			while (++i < listeners.length) {
+				listen        = listeners[i];
 				shouldTrigger = false;
 				
 				if (type === listen.getType()) {
@@ -272,7 +272,7 @@
 					listen.trigger(pub, time, percent, duration);
 					
 					if (listen.isOnce()) {
-						listeners.splice(l, 1);
+						listeners.splice(i--, 1);
 					}
 				}
 			}
