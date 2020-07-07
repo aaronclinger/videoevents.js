@@ -81,6 +81,8 @@
 			
 			switch (type) {
 				case 'percent' :
+					data.value = value * 100 + '%';
+					break;
 				case 'time' :
 					data.value = value;
 					break;
@@ -115,7 +117,9 @@
 		var pub       = {};
 		var listeners = [];
 		var interval  = null;
-		var isYouTube;
+		var isYouTube = false;
+		var isElement = false;
+		var isVimeo   = false;
 		var player;
 		
 		
@@ -178,11 +182,16 @@
 					clearInterval(interval);
 					interval = null;
 				}
-			} else {
+			} else if (isVimeo) {
 				player.off('play', vimeoOnPlay);
 				player.off('pause', vimeoOnPause);
 				player.off('ended', vimeoOnEnd);
 				player.off('timeupdate', vimeoOnProgress);
+			} else if (isElement) {
+				player.removeEventListener('play', elementEvent);
+				player.removeEventListener('pause', elementEvent);
+				player.removeEventListener('ended', elementEvent);
+				player.removeEventListener('timeupdate', elementEvent);
 			}
 			
 			listeners = [];
@@ -191,15 +200,22 @@
 		
 		var init = function(videoPlayer) {
 			player    = videoPlayer;
-			isYouTube = !! player.addEventListener;
+			isVimeo   = !! player.on;
+			isElement = videoPlayer instanceof Element;
+			isYouTube = ! isElement && !! player.addEventListener;
 			
 			if (isYouTube) {
 				player.addEventListener('onReady', youtubeOnReady);
-			} else {
+			} else if (isVimeo) {
 				player.on('play', vimeoOnPlay);
 				player.on('pause', vimeoOnPause);
 				player.on('ended', vimeoOnEnd);
 				player.on('timeupdate', vimeoOnProgress);
+			} else if (isElement) {
+				player.addEventListener('play', elementEvent);
+				player.addEventListener('pause', elementEvent);
+				player.addEventListener('ended', elementEvent);
+				player.addEventListener('timeupdate', elementEvent);
 			}
 		};
 		
@@ -278,6 +294,13 @@
 			}
 		};
 		
+		var constrainPercent = function(val) {
+			val = isNaN(val) ? 0 : val;
+			val = Math.min(1, Math.max(0, val));
+			
+			return Math.round(val * 1000) / 1000;
+		};
+		
 		var youtubeOnReady = function() {
 			player.addEventListener('onStateChange', youtubeOnStateChange);
 		};
@@ -299,7 +322,7 @@
 		var youtubeEvent = function(type) {
 			var time     = player.getCurrentTime();
 			var duration = player.getDuration();
-			var percent  = Math.min(1, Math.max(0, time / duration));
+			var percent  = constrainPercent(time / duration);
 			
 			switch (type) {
 				case 'play' :
@@ -336,7 +359,20 @@
 		};
 		
 		var vimeoEvent = function(type, data) {
-			checkEvents(type, data.seconds, data.percent, data.duration);
+			checkEvents(type, data.seconds, constrainPercent(data.percent), data.duration);
+		};
+		
+		var elementEvent = function(e) {
+			var type     = e.type;
+			var element  = e.target;
+			var time     = element.currentTime;
+			var duration = element.duration;
+			
+			if (type === 'timeupdate') {
+				type = 'progress';
+			}
+			
+			checkEvents(type, time, constrainPercent(time / duration), duration);
 		};
 		
 		init(videoPlayer);
