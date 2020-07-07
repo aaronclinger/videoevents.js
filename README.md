@@ -129,8 +129,8 @@ All `VideoEvents` events pass a data `Object` to the event handler function:
     * **data.percent** `Number` - The current playback position as a decimal percentage.
     * **data.duration** `Number` - The duration of the video in seconds.
     * **[data.value]** `Number` - For [percent](#event-percent) and [time](#event-time) events only:
-        * For `percent` events, the `value` is the [specified](#event-percent) as a 0-1 decimal percentage.
-        * For `time` events, the `value` is the [specified](#event-time) time in seconds.
+        * For `percent` events, the `value` is [specified](#event-percent) as a 0%-100% `String`.
+        * For `time` events, the `value` is [specified](#event-time) as time in seconds.
 
 ### play
 
