@@ -1,11 +1,11 @@
 # VideoEvents.js
 
-A utility which simplifies and standardizes Vimeo and YouTube core video events.
+A utility which simplifies and standardizes HTML, Vimeo, and YouTube video events.
 
 `VideoEvents` is designed to make video monitoring and tracking simpler:
 
-* Track multiple videos from either – or both – Vimeo and YouTube
-* Makes playback events and the events API consistent between the two services
+* Track multiple videos from Vimeo, YouTube, or a HTML Video element
+* Makes playback events and the events API consistent between the different players
 * Adds the missing playback [progress](#event-progress) event to the YouTube player API
 * Trigger events at specific playback [time](#event-time) – relative to either the beginning or end of the video – without having to know the video’s duration
 * Trigger events at specific playback [percentage](#event-percent)
@@ -37,7 +37,7 @@ videoEvents.on('play', function(data) {
 
 Creates a new instance of `VideoEvents`.
 
-* **player** - An instance of either the [Vimeo](https://github.com/vimeo/player.js) or [YouTube](https://developers.google.com/youtube/iframe_api_reference) API player.
+* **player** - An instance of a [Vimeo Player](https://github.com/vimeo/player.js), [YouTube API player](https://developers.google.com/youtube/iframe_api_reference), or a [HTML Video Element](https://www.w3schools.com/html/html5_video.asp).
 
 #### Vimeo Example
 
@@ -85,6 +85,25 @@ Creates a new instance of `VideoEvents`.
 </script>
 ```
 
+#### HTML Video Example
+
+```html
+<video id="htmlplayer" src="example.mp4" controls></video>
+
+<script src="VideoEvents.js"></script>
+
+<script>
+	var htmlVideoEvents = new VideoEvents(document.getElementById('htmlplayer'));
+	
+	htmlVideoEvents.on('play', function(data) {
+		console.log('play', data);
+	});
+	htmlVideoEvents.on('progress', function(data) {
+		console.log('progress', data);
+	});
+</script>
+```
+
 ## Methods
 
 ### on(*event, callback*)
@@ -112,7 +131,7 @@ If neither `event` or `callback` are passed, this method will remove *all* event
 
 ### getPlayer()
 
-Returns the Vimeo or YouTube player used to [instantiate](#create) the `VideoEvents` instance.
+Returns the Vimeo player, YouTube player, or HTML Video element used to [instantiate](#create) the `VideoEvents` instance.
 
 ### destroy()
 
@@ -187,7 +206,7 @@ videoEvents.on('5%', function(data) {
 
 ### <a id="event-time"></a>time
 
-Triggered when the playback passes the defined time in seconds. Seconds can be specified as a `String` or as a `Number`. For negative values, the provided seconds is subtracted from the video duration. 
+Triggered when the playback passes the defined time in seconds. Seconds can be specified as a `String` or as a `Number`. For negative values, the provided seconds is subtracted from the video duration.
 
 *Note: This event may not be triggered exactly at the specified time but will be triggered by the first [progress](#event-progress) event after the defined time.*
 
